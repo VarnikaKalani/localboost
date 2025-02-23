@@ -1,105 +1,122 @@
-import os
 import pandas as pd
 import matplotlib
-matplotlib.use('Agg')  # Use Agg backend for non-GUI environments
+matplotlib.use('Agg')  # Prevent GUI backend issues
 import matplotlib.pyplot as plt
+import os
 
-# ✅ Directory to save plots: InvestorAnalysis/static/plots
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-STATIC_PLOTS_DIR = os.path.join(BASE_DIR, "..", "static", "plots")
-os.makedirs(STATIC_PLOTS_DIR, exist_ok=True)
+# Create the 'plots' directory if it doesn't exist
+plots_dir = 'static/plots'  # Ensure Flask serves from 'static' folder
+os.makedirs(plots_dir, exist_ok=True)
 
-def save_plot(fig, filename):
-    """Save plot to static/plots and return relative URL path."""
-    path = os.path.join(STATIC_PLOTS_DIR, filename)
-    fig.savefig(path, bbox_inches='tight', dpi=300)
-    plt.close(fig)
-    return f"/static/plots/{filename}"
+def run_investor_analysis(file):
+    """
+    Run investor analysis on the uploaded CSV file and generate plots.
 
+    Args:
+        file: A file-like object (uploaded CSV file).
 
-def plot_monthly_growth(df):
-    """✅ Plot monthly revenue growth matching the reference image."""
-    df['Month'] = pd.to_datetime(df['Date']).dt.to_period('M').astype(str)
-    monthly_sales = df.groupby('Month')['Revenue'].sum()
+    Returns:
+        dict: Paths to the generated plot images.
+    """
+    # Read the uploaded CSV file
+    try:
+        df = pd.read_csv(file, parse_dates=['Date'])
+    except Exception as e:
+        raise ValueError(f"Error reading CSV file: {e}")
 
-    fig, ax = plt.subplots(figsize=(10, 6))
-    bars = ax.bar(monthly_sales.index, monthly_sales.values, color='#87CEEB', edgecolor='black', width=0.6)
+    # Check for required columns
+    required_columns = ['Date', 'Product', 'Revenue']
+    missing_columns = [col for col in required_columns if col not in df.columns]
+    if missing_columns:
+        raise ValueError(f"Missing required columns: {', '.join(missing_columns)}")
 
-    ax.set_title("📈 Monthly Growth", fontsize=16, weight='bold', pad=15)
-    ax.set_ylabel("Revenue", fontsize=13)
-    ax.set_xlabel("Month", fontsize=13)
-    ax.set_xticklabels(monthly_sales.index, rotation=45, fontsize=11)
-    ax.set_yticklabels([f"{int(tick)}" for tick in ax.get_yticks()], fontsize=11)
-    ax.grid(axis='y', linestyle='--', alpha=0.7)
-    ax.spines[['top', 'right']].set_visible(False)
+    # Ensure 'Revenue' column is numeric
+    df['Revenue'] = pd.to_numeric(df['Revenue'], errors='coerce')
+    if df['Revenue'].isnull().any():
+        raise ValueError("Revenue column contains invalid numeric values. Please check the data.")
 
-    # Add data labels on top of bars
+    # Create 'Month' and 'Week' columns
+    df['Month'] = df['Date'].dt.to_period('M').astype(str)
+    df['Week'] = df['Date'].dt.to_period('W').apply(lambda r: r.start_time)
+
+    # ----------------------------
+    # 1️⃣ Monthly Growth Plot
+    # ----------------------------
+    monthly_growth = df.groupby('Month')['Revenue'].sum().reset_index()
+
+    plt.figure(figsize=(10, 6))
+    bars = plt.bar(monthly_growth['Month'], monthly_growth['Revenue'],
+                   color='skyblue', edgecolor='black')
+    plt.title('📈 Monthly Growth', fontsize=14, fontweight='bold')
+    plt.xlabel('Month', fontsize=12)
+    plt.ylabel('Revenue', fontsize=12)
+    plt.xticks(rotation=45)
+
+    # Annotate bars
     for bar in bars:
         height = bar.get_height()
-        ax.annotate(f"{int(height)}",
-                    xy=(bar.get_x() + bar.get_width() / 2, height),
-                    xytext=(0, 3),  # Offset text
-                    textcoords="offset points",
-                    ha='center', va='bottom', fontsize=10, weight='bold')
+        plt.annotate(f'{int(height)}', xy=(bar.get_x() + bar.get_width() / 2, height),
+                     xytext=(0, 3), textcoords="offset points", ha='center',
+                     fontsize=9, fontweight='bold')
 
-    return save_plot(fig, "monthly_growth_plot.png")
+    monthly_growth_plot_path = os.path.join(plots_dir, 'monthly_growth_plot.png')
+    plt.tight_layout()
+    plt.savefig(monthly_growth_plot_path)
+    plt.close()
 
+    # ----------------------------
+    # 2️⃣ Product Revenue Distribution Plot
+    # ----------------------------
+    product_distribution = (
+        df.groupby('Product')['Revenue']
+        .sum()
+        .sort_values(ascending=False)
+        .reset_index()
+    )
 
-def plot_product_distribution(df):
-    """✅ Plot product revenue distribution matching the reference image."""
-    product_sales = df.groupby('Product')['Revenue'].sum().sort_values()
+    plt.figure(figsize=(12, 10))
+    bars = plt.barh(product_distribution['Product'], product_distribution['Revenue'],
+                    color='cornflowerblue', edgecolor='black')
+    plt.title('📊 Product Revenue Distribution', fontsize=14, fontweight='bold')
+    plt.xlabel('Total Revenue', fontsize=12)
+    plt.ylabel('Product', fontsize=12)
 
-    fig, ax = plt.subplots(figsize=(12, 12))
-    bars = ax.barh(product_sales.index, product_sales.values, color='#6495ED', edgecolor='black')
-
-    ax.set_title("🛍️ Product Revenue Distribution", fontsize=16, weight='bold', pad=15)
-    ax.set_xlabel("Total Revenue", fontsize=13)
-    ax.set_ylabel("Product", fontsize=13)
-    ax.tick_params(axis='y', labelsize=10)
-    ax.tick_params(axis='x', labelsize=11)
-    ax.grid(axis='x', linestyle='--', alpha=0.7)
-    ax.spines[['top', 'right']].set_visible(False)
-
-    # Add revenue labels next to bars
+    # Annotate bars
     for bar in bars:
         width = bar.get_width()
-        ax.annotate(f"${int(width)}",
-                    xy=(width, bar.get_y() + bar.get_height() / 2),
-                    xytext=(5, 0),
-                    textcoords="offset points",
-                    ha='left', va='center', fontsize=10, weight='bold')
+        plt.annotate(f'${int(width)}', xy=(width, bar.get_y() + bar.get_height() / 2),
+                     xytext=(5, 0), textcoords='offset points', va='center',
+                     fontsize=9, fontweight='bold')
 
-    return save_plot(fig, "product_distribution_plot.png")
+    product_distribution_plot_path = os.path.join(plots_dir, 'product_distribution_plot.png')
+    plt.tight_layout()
+    plt.savefig(product_distribution_plot_path)
+    plt.close()
 
+    # ----------------------------
+    # 3️⃣ Weekly Sales Performance Plot
+    # ----------------------------
+    weekly_sales = df.groupby('Week')['Revenue'].sum().reset_index()
 
-def plot_sales_performance(df):
-    """✅ Plot weekly sales performance trend matching the reference image."""
-    df['Date'] = pd.to_datetime(df['Date'])
-    weekly_sales = df.resample('W-MON', on='Date')['Revenue'].sum().reset_index()
+    plt.figure(figsize=(12, 6))
+    plt.plot(weekly_sales['Week'], weekly_sales['Revenue'], marker='o',
+             linestyle='-', color='seagreen', linewidth=2, label='Weekly Sales')
+    plt.title('📅 Weekly Sales Performance', fontsize=14, fontweight='bold')
+    plt.xlabel('Week Starting', fontsize=12)
+    plt.ylabel('Total Revenue', fontsize=12)
+    plt.xticks(rotation=45)
+    plt.legend()
 
-    fig, ax = plt.subplots(figsize=(12, 7))
-    ax.plot(weekly_sales['Date'], weekly_sales['Revenue'],
-            marker='o', linestyle='-', color='#2E8B57', linewidth=3, markersize=7, label='Weekly Sales')
+    sales_performance_plot_path = os.path.join(plots_dir, 'sales_performance_plot.png')
+    plt.tight_layout()
+    plt.savefig(sales_performance_plot_path)
+    plt.close()
 
-    ax.set_title("📅 Weekly Sales Performance", fontsize=16, weight='bold', pad=10)
-    ax.set_xlabel("Week Starting", fontsize=13)
-    ax.set_ylabel("Total Revenue", fontsize=13)
-    ax.tick_params(axis='x', rotation=45, labelsize=11)
-    ax.tick_params(axis='y', labelsize=11)
-    ax.grid(True, linestyle='--', alpha=0.7)
-    ax.spines[['top', 'right']].set_visible(False)
-    ax.legend(fontsize=12, loc='upper left')
-
-    return save_plot(fig, "sales_performance_plot.png")
-
-
-def run_investor_analysis(file_path):
-    """✅ Run all plots and return their URLs."""
-    df = pd.read_csv(file_path)
-    df['Date'] = pd.to_datetime(df['Date'])
-
+    # ----------------------------
+    # ✅ Return the paths of the saved plots
+    # ----------------------------
     return {
-        "monthly_growth_plot": plot_monthly_growth(df),
-        "product_distribution_plot": plot_product_distribution(df),
-        "sales_performance_plot": plot_sales_performance(df)
+        "monthly_growth_plot": monthly_growth_plot_path.replace('static/', ''),
+        "product_distribution_plot": product_distribution_plot_path.replace('static/', ''),
+        "weekly_sales_performance_plot": sales_performance_plot_path.replace('static/', '')
     }
