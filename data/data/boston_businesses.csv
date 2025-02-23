@@ -1,0 +1,16 @@
+﻿Business_ID,Business_Name,Category,Address,Latitude,Longitude,Contact,Avg_Monthly_Sales
+BOSTON001,Brew & Bean Café,Coffee Shop,"123 Main St, Boston, MA",42.3601,-71.0589,(617) 555-0101,12000
+BOSTON002,Eastside Books,Bookstore,"45 Beacon St, Boston, MA",42.3578,-71.0612,(617) 555-0202,8000
+BOSTON003,Chowder Bowl,Restaurant,"250 Atlantic Ave, Boston, MA",42.3596,-71.0506,(617) 555-0303,23000
+BOSTON004,Beacon Tech Repair,Electronics,"85 Newbury St, Boston, MA",42.3503,-71.076,(617) 555-0404,15000
+BOSTON005,Green Leaf Market,Grocery Store,"99 Boylston St, Boston, MA",42.3522,-71.0658,(617) 555-0505,18000
+BOSTON006,Sun & Rise Bakery,Bakery,"310 Tremont St, Boston, MA",42.3494,-71.0657,(617) 555-0606,9000
+BOSTON007,Harbor Print Shop,Print Services,"22 Broad St, Boston, MA",42.3619,-71.055,(617) 555-0707,4000
+BOSTON008,CityFit Gym,Fitness Center,"75 Dartmouth St, Boston, MA",42.3461,-71.0743,(617) 555-0808,22000
+BOSTON009,Paws & Claws,Pet Supplies,"5 Hanover St, Boston, MA",42.3602,-71.0567,(617) 555-0909,7000
+BOSTON010,Urban Style Salon,Hair Salon,"10 Winter St, Boston, MA",42.3556,-71.0605,(617) 555-1010,11000
+BOSTON011,Dot’s Flower Shop,Florist,"101 Park Dr, Boston, MA",42.345,-71.1,(617) 555-1111,5000
+BOSTON012,TechNova Hub,Coworking Space,"200 State St, Boston, MA",42.3595,-71.0495,(617) 555-1212,30000
+BOSTON013,Boston Bike Depot,Bike Repair,"17 Causeway St, Boston, MA",42.3662,-71.06,(617) 555-1313,8000
+BOSTON014,Sweet Scoop,Ice Cream Shop,"411 Washington St, Boston, MA",42.3587,-71.0571,(617) 555-1414,10000
+BOSTON015,HubCity Pharmacy,Pharmacy,"800 Huntington Ave, Boston, MA",42.336,-71.1007,(617) 555-1515,28000

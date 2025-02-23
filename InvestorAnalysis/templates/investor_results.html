@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Investor Analysis Results</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        body { font-family: Arial, sans-serif; margin-top: 20px; }
+        h1, h3 { text-align: center; }
+        .plot-container { margin: 30px 0; text-align: center; }
+        .btn-upload { display: block; width: 250px; margin: 30px auto; }
+    </style>
+</head>
+<body class="container">
+
+    <h1 class="mb-4">📈 Investor Analysis for: {{ filename }}</h1>
+
+    <div class="plot-container">
+        <h3>Monthly Growth</h3>
+        <img src="{{ url_for('static', filename=monthly_growth_plot) }}" class="img-fluid" alt="Monthly Growth">
+    </div>
+
+    <div class="plot-container">
+        <h3>Product Distribution</h3>
+        <img src="{{ url_for('static', filename=product_distribution_plot) }}" class="img-fluid" alt="Product Distribution">
+    </div>
+
+    <div class="plot-container">
+        <h3>Sales Performance Over Time</h3>
+        <img src="{{ url_for('static', filename=sales_performance_plot) }}" class="img-fluid" alt="Sales Performance">
+    </div>
+
+    <a href="{{ url_for('index') }}" class="btn btn-primary btn-upload">⬅️ Upload Another File</a>
+
+</body>
+</html>
